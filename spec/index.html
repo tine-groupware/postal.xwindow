@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
+    <title>postal.xframe specs</title>
+</head>
+<body>
+    <div id="mocha"></div>
+    <script src="../node_modules/jquery/dist/jquery.js"></script>
+    <script src="../node_modules/lodash/index.js"></script>
+    <script src="../node_modules/babel-core/browser-polyfill.js"></script>
+    <script src="../node_modules/expect.js/expect.js"></script>
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script>
+        mocha.setup( { ui: "bdd", timeout: 60000, ignoreLeaks: true } );
+        if ( !window.location.origin ) {
+            window.location.origin = window.location.protocol + "//" + window.location.host;
+        }
+    </script>
+    <script src="../node_modules/postal/lib/postal.js"></script>
+    <script src="../node_modules/postal.federation/lib/postal.federation.js"></script>
+    <script src="../node_modules/store2/dist/store2.js"></script>
+    <script src="../node_modules/store2/src/store.bind.js"></script>
+    <script src="../lib/postal.xwindow.js"></script>
+    <script src="xframe.units.spec.js"></script>
+    <script>
+        postal.instanceId( "test123" );
+        postal.fedx.signalReady();
+    </script>
+    <iframe src="./iframe.html"></iframe>
+</body>
+</html>

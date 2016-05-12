@@ -1,0 +1,10 @@
+{
+    "name": "postal.xwindow",
+    "version": "0.0.1",
+    "main": ["lib/postal.xwindow.js"],
+    "dependencies": {
+        "lodash": "3.x",
+        "postal.js": "1.x",
+        "postal.federation": "~0.5.2"
+    }
+}

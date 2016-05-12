@@ -1,0 +1,81 @@
+{
+  "name": "postal.xwindow",
+  "description": "postal.js/postal.federation plugin for federating instances of postal.js across unrelated window boundaries.",
+  "version": "0.0.1",
+  "homepage": "http://github.com/tine20/postal.xwindow",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/tine20/postal.xwindow.git"
+  },
+  "author": "Cornelius Weiß (http://www.metaways.de)",
+  "contributors": [
+    {
+      "name": "Cornelius Weiß",
+      "email": "c.weiss@metawyas.de",
+      "url": "http://www.metaways.de"
+    }
+  ],
+  "keywords": [
+    "messaging",
+    "pubsub",
+    "window",
+    "xwindow",
+    "cross window",
+    "frame",
+    "federation",
+    "postal"
+  ],
+  "bugs": {
+    "email": "c.weiss@metaways.de",
+    "url": "http://github.com/tine20/postal.xwindow/issues"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "main": "lib/postal.xwindow.js",
+  "engines": {
+    "node": ">=0.4.0"
+  },
+  "dependencies": {
+    "lodash": "3.x",
+    "store2": "2.1.6",
+    "postal.federation": ">=0.5.2"
+  },
+  "devDependencies": {
+  	"babel": "5.x",
+    "babel-loader": "~4.0.0",
+    "eslint": "^1.3.1",
+    "expect.js": "~0.2.0",
+    "express": "~3.4.7",
+    "gulp": "^3.9.0",
+    "gulp-changed": "^1.3.0",
+    "gulp-eslint": "^1.0.0",
+    "gulp-jscs": "^2.0.0",
+    "gulp-plato": "~0.1.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-uglify": "^1.4.0",
+    "gulp-util": "^3.0.6",
+    "jquery": "^2.1.4",
+    "karma": "^0.13.9",
+    "karma-chrome-launcher": "^0.2.0",
+    "karma-coverage": "^0.5.1",
+    "karma-mocha": "^0.2.0",
+    "karma-spec-reporter": "0.0.20",
+    "mocha": "^2.3.0",
+    "open": "~0.0.4",
+    "webpack": "^1.12.1",
+    "webpack-stream": "^2.1.0",
+    "bootstrap": "^3.3.5",
+    "postal.request-response": "^0.3.1"
+  },
+  "license": "(MIT OR GPL-2.0)",
+  "scripts": {
+    "build": "gulp",
+    "start": "gulp server"
+  },
+  "files": [
+    "LICENSE",
+    "lib"
+  ]
+}

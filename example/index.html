@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Playground</title>
+    <script src="../node_modules/babel-core/browser-polyfill.js"></script>
+    <script src="../node_modules/lodash/index.js"></script>
+    <script src="../node_modules/jquery/dist/jquery.js"></script>
+    <script src="../node_modules/postal/lib/postal.js"></script>
+    <script src="../node_modules/postal.federation/lib/postal.federation.js"></script>
+    <script src="../node_modules/postal.request-response/lib/postal.request-response.js"></script>
+    <script src="../node_modules/store2/dist/store2.js"></script>
+    <script src="../node_modules/store2/src/store.bind.js"></script>
+    <script src="../lib/postal.xwindow.js"></script>
+    <!--<script src="main.js"></script>-->
+</head>
+<body>
+<div>
+    <input type="button" value="Send Message" id="sendMessage">
+    <input type="button" value="Clear" id="clear">
+    <input type="button" value="Disconnect" id="disconnect">
+</div>
+
+<div id="messages"></div>
+
+<script>
+    //        // We need to tell postal how to get a deferred instance
+    //        postal.configuration.promise.createDeferred = function() {
+    //            return new $.Deferred();
+    //        };
+    //        // We need to tell postal how to get a "public-facing"/safe promise instance
+    //        postal.configuration.promise.getPromise = function(dfd) {
+    //            return dfd.promise();
+    //        };
+
+    postal.instanceId('xwindow-' + _.random(0,1000));
+    postal.fedx.addFilter([
+        { channel: 'thirdparty',   topic: '#', direction: 'both' },
+//            { channel : 'postal.request-response', topic : '#', direction : 'both'}
+    ]);
+    postal.subscribe( {
+        channel: "thirdparty",
+        topic: "#",
+        callback : function ( d, e ) {
+            $( "#messages" ).append( "<div><pre>" + JSON.stringify( e, null, 4 ) + "</pre></div>" );
+        }
+    } );
+
+    $(function() {
+        $( "#clear" ).on( "click", function() {
+            $( "#messages" ).html( "" );
+            postal.publish( {
+                channel: "thirdparty",
+                topic: "clear"
+            } );
+        } );
+        $("#sendMessage").on('click', function(){
+            postal.publish({
+                channel: "thirdparty",
+                topic: "some.topic",
+                data: "This message was send with love from an external thirdparty Tine 2.0 xwindow client"
+            });
+        });
+        $( "#disconnect" ).on( "click", function() {
+            postal.fedx.disconnect( { } );
+        } );
+
+        $("#msg3").on('click', function(){
+            postal.fedx.disconnect();
+        });
+        postal.fedx.signalReady();
+    });
+</script>
+</body>
+</html>
