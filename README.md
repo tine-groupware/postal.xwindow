@@ -1,6 +1,6 @@
 # postal.xwindow
 
-## Version 0.0.1 (Dual Licensed [MIT](http://www.opensource.org/licenses/mit-license) & [GPL](http://www.opensource.org/licenses/gpl-license))
+## Version 0.0.2 (Dual Licensed [MIT](http://www.opensource.org/licenses/mit-license) & [GPL](http://www.opensource.org/licenses/gpl-license))
 
 ## What is it?
 postal.xwindow is an add-on for [postal.js](https://github.com/postaljs/postal.js) that provides cross window communication capabilities using a localStoreage hack.
@@ -43,6 +43,29 @@ This is a postal add-on, so it's assumed that you have postal and lodash loaded 
 ```
 * NOTE: as postal.xwindow uses localStorage you might need to take care of what you post and have popper cleanup.
 
+```javascript
+
+// this instance of postal *MUST* have a unique identifier, otherwise
+// there is no way to differentiate between this instance of postal
+// and a remote instance. You can provide your own server-generated
+// GUID, or - if you know a unique value ahead of time - you can set
+// it via postal.instanceId(id). Calling postal.instanceId() without any
+// arguments acts as a getter - it returns the current instance Id.
+postal.instanceId("parent");
+
+// You can optionally configure postal.xwindow with the configure call.
+// `allowedOrigins` is an array of origins that you can use to determine
+// if you want to federate with postal instances loaded in another window
+// from those origins.  If another host attempts to federate with you from
+// an origin not listed in that array, the local instance of postal will
+// not allow it. The local instance of postal will not send any messages to
+// (nor process any from) an origin not listed in this array.
+postal.fedx.transports.xwindow.configure({
+	allowedOrigins : [ "http://some.host.com", "http://another.com" ],
+	enabled: true // this is redundant - just showing that it's here
+});
+
+```
 ## Building, Running Tests
 
 * `npm install` to install dependencies

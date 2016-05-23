@@ -14,10 +14,11 @@ export let env = {
 };
 
 const defaults = {
+	allowedOrigins: [ env.origin ],
 	enabled: true,
+	safeSerialize: false,
 	localStoragePrefix: "postal.fedx.xwindow",
-	targetTimeout: 60000, // 1 minute
-	safeSerialize: false
+	targetTimeout: 60000 // 1 minute
 };
 
 export let state = {

@@ -23,23 +23,25 @@ function executeTests() {
 	describe( "postal.xwindow - unit tests", function() {
 		var XWindowClient = postal.fedx.transports.xwindow.XWindowClient;
 		var fakeTarget = {
-			set: function( target, msg ) {
-				this.msg = msg;
-				this.target = target;
+			set: function( key, msg ) {
+				this[key] = msg;
+			},
+			get: function( key ) {
+				return this[key];
 			},
 			getAll: function() {
-				return { message: "", targetTimeout: "" };
+				return { message: this.message, targetTimeout: this.targetTimeout, targetUrl: this.targetUrl };
 			}
 		};
 		var testFederationMessage = '{"postal":true,"packingSlip":{"instanceId": "123456","type":"federation.message","timeStamp":"2013-01-12T16:15:23.853Z","envelope":{"channel":"federate","topic":"all.the.things","data":"Booyah!"}}}';
 		var fakeEvent = {
-			origin: "http://fake.origin",
+			url: "http://fake.origin",
 			source: fakeTarget,
 			newValue: postal.fedx.transports.xwindow.eagerSerialize ? testFederationMessage : JSON.parse( testFederationMessage )
 		};
 		var testFederationDeleteMessage = '{"postal":true,"packingSlip":{"instanceId": "123456","type":"federation.disconnect","timeStamp":"2013-01-12T16:15:23.853Z","envelope":{"channel":"federate","topic":"all.the.things","data":"Booyah!"}}}';
 		var fakeDeleteEvent = {
-			origin: "http://fake.origin",
+			url: "http://fake.origin",
 			source: fakeTarget,
 			newValue: postal.fedx.transports.xwindow.eagerSerialize ? testFederationDeleteMessage : JSON.parse( testFederationDeleteMessage )
 		};
@@ -48,10 +50,11 @@ function executeTests() {
 			describe( "When using defaults", function() {
 				it( "should return expected default values", function() {
 					expect( postal.fedx.transports.xwindow.configure() ).to.eql( {
+						allowedOrigins: [ window.location.origin ],
 						enabled: true,
+						safeSerialize: false,
 						localStoragePrefix: "postal.fedx.xwindow",
-						targetTimeout: 60000,
-						safeSerialize: false
+						targetTimeout: 60000
 					} );
 				} );
 			} );
@@ -66,20 +69,21 @@ function executeTests() {
 				} );
 				it( "should return expected values", function() {
 					expect( postal.fedx.transports.xwindow.configure() ).to.eql( {
+						allowedOrigins: [ window.location.origin ],
 						enabled: false,
+						safeSerialize: false,
 						localStoragePrefix: "postal.fedx.xwindow",
-						targetTimeout: 60000,
-						safeSerialize: false
+						targetTimeout: 60000
 					} );
 				} );
 			} );
 			describe( "When setting entire configuration", function() {
 				beforeEach( function() {
 					postal.fedx.transports.xwindow.configure( {
+						allowedOrigins: [ "who.com" ],
 						enabled: false,
 						localStoragePrefix: "some.other.prefix",
-						targetTimeout: 30000,
-						safeSerialize: true
+						targetTimeout: 30000
 					} );
 				} );
 				afterEach( function() {
@@ -87,56 +91,57 @@ function executeTests() {
 				} );
 				it( "should return expected values", function() {
 					expect( postal.fedx.transports.xwindow.configure() ).to.eql( {
+						allowedOrigins: [ "who.com" ],
 						enabled: false,
+						safeSerialize: false,
 						localStoragePrefix: "some.other.prefix",
-						targetTimeout: 30000,
-						safeSerialize: true
+						targetTimeout: 30000
 					} );
 				} );
 			} );
 		} );
 
-		//describe( "When calling shouldProcess on an XWindowClient instance", function() {
-		//	var client;
-		//	beforeEach( function() {
-		//		client = new XWindowClient( fakeTarget, {
-		//			origin: "http://fake.origin"
-		//		}, "123456" );
-		//	} );
-		//	afterEach( function() {
-		//		postal.fedx.transports.xwindow.clearConfiguration();
-		//	} );
-		//	it( "should return true if target is in allowed origins", function() {
-		//		postal.fedx.transports.xwindow.configure( {
-		//			allowedOrigins: [ "http://fake.origin" ]
-		//		} );
-		//		expect( client.shouldProcess() ).to.be( true );
-		//	} );
-		//	it( "should return false if target is *not* in allowed origins", function() {
-		//		expect( client.shouldProcess() ).to.be( false );
-		//	} );
-		//	it( "should return false if xwindow has been disabled", function() {
-		//		postal.fedx.transports.xwindow.configure( {
-		//			allowedOrigins: [ "http://fake.origin" ],
-		//			enabled: false
-		//		} );
-		//		expect( client.shouldProcess() ).to.be( false );
-		//	} );
-		//	it( "should return true if the client's origin is '*'", function() {
-		//		client.options.origin = "*";
-		//		expect( client.shouldProcess() ).to.be( true );
-		//	} );
-		//	it( "should return true if the allowed origins array is empty", function() {
-		//		postal.fedx.transports.xwindow.configure( {
-		//			allowedOrigins: []
-		//		} );
-		//		expect( client.shouldProcess() ).to.be( true );
-		//	} );
-		//	it( "should return false if the client origin is undefined", function() {
-		//		delete client.options.origin;
-		//		expect( client.shouldProcess() ).to.be( false );
-		//	} );
-		//} );
+		describe( "When calling shouldProcess on an XWindowClient instance", function() {
+			var client;
+			beforeEach( function() {
+				client = new XWindowClient( fakeTarget, {
+					origin: "http://fake.origin"
+				}, "123456" );
+			} );
+			afterEach( function() {
+				postal.fedx.transports.xwindow.clearConfiguration();
+			} );
+			it( "should return true if target is in allowed origins", function() {
+				postal.fedx.transports.xwindow.configure( {
+					allowedOrigins: [ "http://fake.origin" ]
+				} );
+				expect( client.shouldProcess() ).to.be( true );
+			} );
+			it( "should return false if target is *not* in allowed origins", function() {
+				expect( client.shouldProcess() ).to.be( false );
+			} );
+			it( "should return false if xwindow has been disabled", function() {
+				postal.fedx.transports.xwindow.configure( {
+					allowedOrigins: [ "http://fake.origin" ],
+					enabled: false
+				} );
+				expect( client.shouldProcess() ).to.be( false );
+			} );
+			it( "should return true if the client's origin is '*'", function() {
+				client.options.origin = "*";
+				expect( client.shouldProcess() ).to.be( true );
+			} );
+			it( "should return true if the allowed origins array is empty", function() {
+				postal.fedx.transports.xwindow.configure( {
+					allowedOrigins: []
+				} );
+				expect( client.shouldProcess() ).to.be( true );
+			} );
+			it( "should return false if the client origin is undefined", function() {
+				delete client.options.origin;
+				expect( client.shouldProcess() ).to.be( false );
+			} );
+		} );
 
 		describe( "When calling send on an XWindowClient instance", function() {
 			var client;
@@ -151,16 +156,16 @@ function executeTests() {
 			afterEach( function() {
 				postal.fedx.transports.xwindow.clearConfiguration();
 				delete fakeTarget.targetUrl;
-				delete fakeTarget.msg;
+				delete fakeTarget.message;
 			} );
 			it( "should pass correct arguments to target instance", function() {
 				client.send( {
 					foo: "bar"
 				} );
 				if ( postal.fedx.transports.xwindow.eagerSerialize ) {
-					expect( fakeTarget.msg ).to.be( '{"postal":true,"packingSlip":{"foo":"bar"}}' );
+					expect( fakeTarget.message ).to.be( '{"postal":true,"packingSlip":{"foo":"bar"}}' );
 				} else {
-					expect( fakeTarget.msg ).to.eql( {
+					expect( fakeTarget.message ).to.eql( {
 						postal: true,
 						packingSlip: {
 							foo: "bar"
@@ -169,14 +174,14 @@ function executeTests() {
 				}
 				//expect( fakeTarget.targetUrl ).to.be( "http://fake.origin" );
 			} );
-			//it( "should not send if shouldProcess returns false", function() {
-			//	postal.fedx.transports.xwindow.clearConfiguration();
-			//	client.send( {
-			//		foo: "bar"
-			//	} );
-			//	expect( fakeTarget.msg ).to.be( undefined );
-			//	expect( fakeTarget.targetUrl ).to.be( undefined );
-			//} );
+			it( "should not send if shouldProcess returns false", function() {
+				postal.fedx.transports.xwindow.clearConfiguration();
+				client.send( {
+					foo: "bar"
+				} );
+				expect( fakeTarget.message ).to.be( undefined );
+				//expect( fakeTarget.targetUrl ).to.be( undefined );
+			} );
 		} );
 
 		describe( "When calling sendPing on an XWindowClient instance", function() {
@@ -192,17 +197,17 @@ function executeTests() {
 				afterEach( function() {
 					postal.fedx.transports.xwindow.clearConfiguration();
 					delete fakeTarget.targetUrl;
-					delete fakeTarget.msg;
+					delete fakeTarget.message;
 				} );
 				it( "should pass correct arguments to target instance", function() {
 					var msg;
 					client.sendPing();
 					if ( postal.fedx.transports.xwindow.eagerSerialize ) {
-						msg = JSON.parse( fakeTarget.msg );
-						expect( Object.prototype.toString.call( fakeTarget.msg ) ).to.be( "[object String]" );
+						msg = JSON.parse( fakeTarget.message );
+						expect( Object.prototype.toString.call( fakeTarget.message ) ).to.be( "[object String]" );
 					} else {
-						msg = fakeTarget.msg;
-						expect( Object.prototype.toString.call( fakeTarget.msg ) ).to.be( "[object Object]" );
+						msg = fakeTarget.message;
+						expect( Object.prototype.toString.call( fakeTarget.message ) ).to.be( "[object Object]" );
 					}
 					expect( msg.postal ).to.be( true );
 					expect( msg.packingSlip.type ).to.be( "federation.ping" );
@@ -210,12 +215,12 @@ function executeTests() {
 					expect( msg.packingSlip ).to.have.property( "ticket" );
 					//expect( fakeTarget.targetUrl ).to.be( "http://fake.origin" );
 				} );
-				//it( "should not send if shouldProcess returns false", function() {
-				//	postal.fedx.transports.xwindow.clearConfiguration();
-				//	client.sendPing();
-				//	expect( fakeTarget.msg ).to.be( undefined );
-				//	expect( fakeTarget.targetUrl ).to.be( undefined );
-				//} );
+				it( "should not send if shouldProcess returns false", function() {
+					postal.fedx.transports.xwindow.clearConfiguration();
+					client.sendPing();
+					expect( fakeTarget.message ).to.be( undefined );
+					expect( fakeTarget.targetUrl ).to.be( undefined );
+				} );
 			} );
 
 		describe( "When calling sendPong on an XWindowClient instance", function() {
@@ -239,17 +244,17 @@ function executeTests() {
 				afterEach( function() {
 					postal.fedx.transports.xwindow.clearConfiguration();
 					delete fakeTarget.targetUrl;
-					delete fakeTarget.msg;
+					delete fakeTarget.message;
 				} );
 				it( "should pass correct arguments to target instance", function() {
 					var msg;
 					client.sendPong( pingMsg.packingSlip );
 					if ( postal.fedx.transports.xwindow.eagerSerialize ) {
-						msg = JSON.parse( fakeTarget.msg );
-						expect( Object.prototype.toString.call( fakeTarget.msg ) ).to.be( "[object String]" );
+						msg = JSON.parse( fakeTarget.message );
+						expect( Object.prototype.toString.call( fakeTarget.message ) ).to.be( "[object String]" );
 					} else {
-						msg = fakeTarget.msg;
-						expect( Object.prototype.toString.call( fakeTarget.msg ) ).to.be( "[object Object]" );
+						msg = fakeTarget.message;
+						expect( Object.prototype.toString.call( fakeTarget.message ) ).to.be( "[object Object]" );
 					}
 					expect( msg.postal ).to.be( true );
 					expect( msg.packingSlip.type ).to.be( "federation.pong" );
@@ -257,12 +262,12 @@ function executeTests() {
 					expect( msg.packingSlip.pingData.ticket ).to.be( "f2aa9b2b-1c12-455c-ac1e-af991648607b" );
 					//expect( fakeTarget.targetUrl ).to.be( "http://fake.origin" );
 				} );
-				//it( "should not send if shouldProcess returns false", function() {
-				//	postal.fedx.transports.xwindow.clearConfiguration();
-				//	client.sendPing();
-				//	expect( fakeTarget.msg ).to.be( undefined );
-				//	expect( fakeTarget.targetUrl ).to.be( undefined );
-				//} );
+				it( "should not send if shouldProcess returns false", function() {
+					postal.fedx.transports.xwindow.clearConfiguration();
+					client.sendPing();
+					expect( fakeTarget.message ).to.be( undefined );
+					expect( fakeTarget.targetUrl ).to.be( undefined );
+				} );
 			} );
 
 		describe( "When calling sendMessage on an XWindowClient instance", function() {
@@ -283,11 +288,11 @@ function executeTests() {
 				afterEach( function() {
 					postal.fedx.transports.xwindow.clearConfiguration();
 					delete fakeTarget.targetUrl;
-					delete fakeTarget.msg;
+					delete fakeTarget.message;
 				} );
 				it( "should not send the message if handshakeComplete is false", function() {
 					client.sendMessage( env );
-					expect( typeof fakeTarget.msg === "undefined" ).to.be( true );
+					expect( typeof fakeTarget.message === "undefined" ).to.be( true );
 					expect( typeof fakeTarget.targetUrl === "undefined" ).to.be( true );
 				} );
 				it( "should pass correct arguments to target instance if handshakeComplete is true", function() {
@@ -295,11 +300,11 @@ function executeTests() {
 					client.handshakeComplete = true;
 					client.sendMessage( env );
 					if ( postal.fedx.transports.xwindow.eagerSerialize ) {
-						msg = JSON.parse( fakeTarget.msg );
-						expect( Object.prototype.toString.call( fakeTarget.msg ) ).to.be( "[object String]" );
+						msg = JSON.parse( fakeTarget.message );
+						expect( Object.prototype.toString.call( fakeTarget.message ) ).to.be( "[object String]" );
 					} else {
-						msg = fakeTarget.msg;
-						expect( Object.prototype.toString.call( fakeTarget.msg ) ).to.be( "[object Object]" );
+						msg = fakeTarget.message;
+						expect( Object.prototype.toString.call( fakeTarget.message ) ).to.be( "[object Object]" );
 					}
 					expect( msg.postal ).to.be( true );
 					expect( msg.packingSlip.type ).to.be( "federation.message" );
@@ -312,12 +317,12 @@ function executeTests() {
 					} );
 					//expect( fakeTarget.targetUrl ).to.be( "http://fake.origin" );
 				} );
-				//it( "should not send if shouldProcess returns false", function() {
-				//	postal.fedx.transports.xwindow.clearConfiguration();
-				//	client.sendMessage( env );
-				//	expect( fakeTarget.msg ).to.be( undefined );
-				//	expect( fakeTarget.targetUrl ).to.be( undefined );
-				//} );
+				it( "should not send if shouldProcess returns false", function() {
+					postal.fedx.transports.xwindow.clearConfiguration();
+					client.sendMessage( env );
+					expect( fakeTarget.message ).to.be( undefined );
+					expect( fakeTarget.targetUrl ).to.be( undefined );
+				} );
 			} );
 
 		describe( "When calling sendBundle on an XWindowClient instance", function() {
@@ -343,17 +348,17 @@ function executeTests() {
 				afterEach( function() {
 					postal.fedx.transports.xwindow.clearConfiguration();
 					delete fakeTarget.targetUrl;
-					delete fakeTarget.msg;
+					delete fakeTarget.message;
 				} );
 				it( "should pass correct arguments to target instance", function() {
 					var msg;
 					client.sendBundle( [ slip1, slip2 ] );
 					if ( postal.fedx.transports.xwindow.eagerSerialize ) {
-						msg = JSON.parse( fakeTarget.msg );
-						expect( Object.prototype.toString.call( fakeTarget.msg ) ).to.be( "[object String]" );
+						msg = JSON.parse( fakeTarget.message );
+						expect( Object.prototype.toString.call( fakeTarget.message ) ).to.be( "[object String]" );
 					} else {
-						msg = fakeTarget.msg;
-						expect( Object.prototype.toString.call( fakeTarget.msg ) ).to.be( "[object Object]" );
+						msg = fakeTarget.message;
+						expect( Object.prototype.toString.call( fakeTarget.message ) ).to.be( "[object Object]" );
 					}
 					expect( msg.postal ).to.be( true );
 					expect( msg.packingSlip.type ).to.be( "federation.bundle" );
@@ -380,18 +385,25 @@ function executeTests() {
 		describe( "When calling getTargets", function() {
 				var targets;
 				beforeEach( function() {
+					// we need to register ourself
+					postal.instanceId( "test123" );
+					postal.fedx.signalReady();
 					targets = postal.fedx.transports.xwindow.getTargets();
 				} );
-				it( "default getTargets should return available iframes", function() {
+				it( "default getTargets should return available targets", function() {
 					if ( inBrowser ) {
 						expect( targets.length ).to.be( 2 );
 					}
 					// not going to fight with origin in karma
-					//expect( targets[0].origin ).to.be( window.location.origin );
-					//expect( targets[0] ).to.have.property( "target" );
-					//expect( targets[0] ).to.have.property( "origin" );
-					//expect( targets[0].target ).to.have.property( "postMessage" );
-					//expect( typeof targets[0].target.postMessage ).to.be( "function" );
+					expect( targets[0] ).to.have.property( "origin" );
+					expect( targets[0].origin ).to.be( window.location.origin );
+					expect( targets[0] ).to.have.property( "target" );
+					expect( targets[0].target ).to.have.property( "set" );
+					expect( typeof targets[0].target.set ).to.be( "function" );
+					expect( targets[0].target ).to.have.property( "on" );
+					expect( typeof targets[0].target.on ).to.be( "function" );
+					expect( targets[0].target ).to.have.property( "get" );
+					expect( typeof targets[0].target.get ).to.be( "function" );
 				} );
 			} );
 
@@ -515,7 +527,7 @@ function executeTests() {
 					postal.fedx.transports.xwindow.clearConfiguration();
 					postal.fedx.transports.xwindow.remotes = [];
 					delete fakeTarget.targetUrl;
-					delete fakeTarget.msg;
+					delete fakeTarget.message;
 				} );
 				it( "should not send the message if handshakeComplete is false", function() {
 					postal.fedx.sendMessage( {
@@ -523,7 +535,7 @@ function executeTests() {
 						topic: "all.the.things",
 						data: "Booyah!"
 					} );
-					expect( typeof fakeTarget.msg === "undefined" ).to.be( true );
+					expect( typeof fakeTarget.message === "undefined" ).to.be( true );
 					expect( typeof fakeTarget.targetUrl === "undefined" ).to.be( true );
 				} );
 				it( "should pass correct arguments to target instance if handshakeComplete is true", function() {
@@ -535,11 +547,11 @@ function executeTests() {
 						data: "Booyah!"
 					} );
 					if ( postal.fedx.transports.xwindow.eagerSerialize ) {
-						msg = JSON.parse( fakeTarget.msg );
-						expect( Object.prototype.toString.call( fakeTarget.msg ) ).to.be( "[object String]" );
+						msg = JSON.parse( fakeTarget.message );
+						expect( Object.prototype.toString.call( fakeTarget.message ) ).to.be( "[object String]" );
 					} else {
-						msg = fakeTarget.msg;
-						expect( Object.prototype.toString.call( fakeTarget.msg ) ).to.be( "[object Object]" );
+						msg = fakeTarget.message;
+						expect( Object.prototype.toString.call( fakeTarget.message ) ).to.be( "[object Object]" );
 					}
 					expect( msg.postal ).to.be( true );
 					expect( msg.packingSlip.type ).to.be( "federation.message" );
@@ -563,7 +575,7 @@ function executeTests() {
 							console.log( "do stuff" );
 						}
 					} );
-					expect( fakeTarget.msg.packingSlip.envelope ).to.eql( {
+					expect( fakeTarget.message.packingSlip.envelope ).to.eql( {
 						channel: "federate",
 						topic: "all.the.things",
 						data: "Booyah!",
@@ -578,7 +590,7 @@ function executeTests() {
 						topic: "all.the.things",
 						data: "Booyah!"
 					} );
-					expect( fakeTarget.msg ).to.be( undefined );
+					expect( fakeTarget.message ).to.be( undefined );
 					expect( fakeTarget.targetUrl ).to.be( undefined );
 				} );
 			} );
@@ -601,7 +613,7 @@ function executeTests() {
 					postal.fedx.transports.xwindow.clearConfiguration();
 					postal.fedx.transports.xwindow.remotes = [];
 					delete fakeTarget.targetUrl;
-					delete fakeTarget.msg;
+					delete fakeTarget.message;
 				} );
 
 				it( "should delegate to send on the client", function() {
@@ -628,7 +640,7 @@ function executeTests() {
 					postal.fedx.transports.xwindow.clearConfiguration();
 					postal.fedx.transports.xwindow.remotes = [];
 					delete fakeTarget.targetUrl;
-					delete fakeTarget.msg;
+					delete fakeTarget.message;
 				} );
 
 				it( "should call disconnect on each remote", function() {
@@ -657,7 +669,7 @@ function executeTests() {
 					postal.fedx.transports.xwindow.clearConfiguration();
 					postal.fedx.transports.xwindow.remotes = [];
 					delete fakeTarget.targetUrl;
-					delete fakeTarget.msg;
+					delete fakeTarget.message;
 				} );
 				it( "should pass correct arguments to target instance", function() {
 					var msg;
@@ -666,11 +678,11 @@ function executeTests() {
 						origin: "http://fake.origin"
 					} );
 					if ( postal.fedx.transports.xwindow.eagerSerialize ) {
-						msg = JSON.parse( fakeTarget.msg );
-						expect( Object.prototype.toString.call( fakeTarget.msg ) ).to.be( "[object String]" );
+						msg = JSON.parse( fakeTarget.message );
+						expect( Object.prototype.toString.call( fakeTarget.message ) ).to.be( "[object String]" );
 					} else {
-						msg = fakeTarget.msg;
-						expect( Object.prototype.toString.call( fakeTarget.msg ) ).to.be( "[object Object]" );
+						msg = fakeTarget.message;
+						expect( Object.prototype.toString.call( fakeTarget.message ) ).to.be( "[object Object]" );
 					}
 					expect( msg.postal ).to.be( true );
 					expect( msg.packingSlip.type ).to.be( "federation.ping" );
@@ -678,15 +690,15 @@ function executeTests() {
 					expect( msg.packingSlip ).to.have.property( "ticket" );
 					//expect( fakeTarget.targetUrl ).to.be( "http://fake.origin" );
 				} );
-				//it( "should not send if shouldProcess returns false", function() {
-				//	postal.fedx.transports.xwindow.clearConfiguration();
-				//	postal.fedx.transports.xwindow.signalReady( {
-				//		target: fakeTarget,
-				//		origin: "http://fake.origin"
-				//	} );
-				//	expect( fakeTarget.msg ).to.be( undefined );
-				//	expect( fakeTarget.targetUrl ).to.be( undefined );
-				//} );
+				it( "should not send if shouldProcess returns false", function() {
+					postal.fedx.transports.xwindow.clearConfiguration();
+					postal.fedx.transports.xwindow.signalReady( {
+						target: fakeTarget,
+						origin: "http://fake.origin"
+					} );
+					expect( fakeTarget.message ).to.be( undefined );
+					expect( fakeTarget.targetUrl ).to.be( undefined );
+				} );
 			} );
 	} );
 	//

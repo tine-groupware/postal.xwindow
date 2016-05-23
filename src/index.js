@@ -1,10 +1,11 @@
 import _ from "lodash";
 import postal from "postal";
 import {
-    _memoRemoteByInstanceId,
-    _memoRemoteByTarget,
-    _disconnectClient,
-    safeSerialize
+	_memoRemoteByInstanceId,
+	_memoRemoteByTarget,
+	_disconnectClient,
+	safeSerialize,
+	parseUri
 } from "./utils";
 import { state, env } from "./state";
 import XWindowClient from "./XWindowClient";
@@ -47,9 +48,11 @@ postal.fedx.transports.xwindow = {
 		return _.reduce( store.namespace( state.config.localStoragePrefix ).getAll(), function( memo, targetData, id ) {
 			if ( id.match( /\.targetTimeout$/ ) ) {
 				const targetId = id.split( "." )[0];
+				const target = store.namespace( state.config.localStoragePrefix + "." + targetId );
 				memo.push( {
 					targetId: targetId,
-					target: store.namespace( state.config.localStoragePrefix + "." + targetId )
+					target: target,
+					origin: target.get( "targetUrl" )
 				} );
 			}
 			return memo;
@@ -92,6 +95,7 @@ postal.fedx.transports.xwindow = {
 	},
 	routeMessage: function( event ) {
 		const parsed = this.unwrapFromTransport( event.newValue );
+
 		if ( parsed && parsed.postal ) {
 			const packingSlip = parsed.packingSlip;
 			const instanceId = packingSlip.instanceId;
@@ -100,14 +104,18 @@ postal.fedx.transports.xwindow = {
 					return x.instanceId === instanceId;
 				} );
 				if ( !remote ) {
-					remote = XWindowClient.getInstance(
-					store.namespace( state.config.localStoragePrefix + "." + instanceId ),
-					{},
-					instanceId
-					);
+					var target = store.namespace( state.config.localStoragePrefix + "." + instanceId );
+					remote = XWindowClient.getInstance( target, { origin: target.get( "targetUrl" ) }, instanceId );
 					this.remotes.push( remote );
 				}
-				remote.onMessage( packingSlip );
+
+				// origin forgery protection
+				const url = parseUri( event.url );
+				const origin = url.protocol + "://" + url.authority;
+
+				if ( remote.options.origin == origin ) {
+					remote.onMessage( packingSlip );
+				}
 			}
 		}
 	},
@@ -116,6 +124,7 @@ postal.fedx.transports.xwindow = {
 		const that = this;
 
 		this.target = store.namespace( state.config.localStoragePrefix + "." + instanceId );
+		this.target.set( "targetUrl", env.origin );
 		this.target.on( "message", _.bind( this.routeMessage, this ) );
 		this.keepAlive();
 
@@ -129,7 +138,7 @@ postal.fedx.transports.xwindow = {
 					return x.instanceId === def.targetId;
 				} );
 				if ( !remote ) {
-					remote = XWindowClient.getInstance( def.target, {}, def.targetId );
+					remote = XWindowClient.getInstance( def.target, { origin: def.origin }, def.targetId );
 					that.remotes.push( remote );
 				}
 				remote.sendPing( callback );
@@ -138,6 +147,7 @@ postal.fedx.transports.xwindow = {
 	},
 	keepAlive: function() {
 		this.target.set( "targetTimeout", new Date().getTime() + state.config.targetTimeout );
+
 		this.tidyStorage();
 		this.tidyRemotes();
 
