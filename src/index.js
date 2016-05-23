@@ -44,19 +44,7 @@ postal.fedx.transports.xwindow = {
 		this.remotes = _.without.apply( null, [ this.remotes ].concat( clients ) );
 	},
 	getTargets: function() {
-		this.tidyStorage();
-		return _.reduce( store.namespace( state.config.localStoragePrefix ).getAll(), function( memo, targetData, id ) {
-			if ( id.match( /\.targetTimeout$/ ) ) {
-				const targetId = id.split( "." )[0];
-				const target = store.namespace( state.config.localStoragePrefix + "." + targetId );
-				memo.push( {
-					targetId: targetId,
-					target: target,
-					origin: target.get( "targetUrl" )
-				} );
-			}
-			return memo;
-		}, [] );
+		return this.tidyStorage();
 	},
 	sendMessage: function( env ) {
 		let envelope = env;
@@ -124,7 +112,6 @@ postal.fedx.transports.xwindow = {
 		const that = this;
 
 		this.target = store.namespace( state.config.localStoragePrefix + "." + instanceId );
-		this.target.set( "targetUrl", env.origin );
 		this.target.on( "message", _.bind( this.routeMessage, this ) );
 		this.keepAlive();
 
@@ -146,6 +133,7 @@ postal.fedx.transports.xwindow = {
 		}, this );
 	},
 	keepAlive: function() {
+		this.target.set( "targetUrl", env.origin );
 		this.target.set( "targetTimeout", new Date().getTime() + state.config.targetTimeout );
 
 		this.tidyStorage();
@@ -154,13 +142,28 @@ postal.fedx.transports.xwindow = {
 		_.delay( _.bind( this.keepAlive, this ), Math.round( state.config.targetTimeout / 2 ) );
 	},
 	tidyStorage: function() {
-		const now = new Date().getTime();
-		_.each( store.namespace( state.config.localStoragePrefix ).getAll(), function( value, id ) {
-			if ( id.match( /\.targetTimeout$/ ) && value < now ) {
-				var instanceId = id.split( "." )[0];
-				store.namespace( state.config.localStoragePrefix + "." + instanceId ).clear();
+		const targetIds = _.reduce( store.namespace( state.config.localStoragePrefix ).getAll(), function( memo, targetData, id ) {
+			const targetId = id.split( "." )[0];
+			if ( _.indexOf( memo, targetId ) < 0 ) {
+				memo.push( targetId );
 			}
-		} );
+			return memo;
+		}, [] );
+
+		const now = new Date().getTime();
+		return _.reduce( targetIds, function( memo, targetId ) {
+			const target = store.namespace( state.config.localStoragePrefix + "." + targetId );
+			if ( target.get( "targetTimeout" ) < now ) {
+				target.clear();
+			} else {
+				memo.push( {
+					targetId: targetId,
+					target: target,
+					origin: target.get( "targetUrl" )
+				} );
+			}
+			return memo;
+		}, [] );
 	},
 	tidyRemotes: function() {
 		const that = this;
