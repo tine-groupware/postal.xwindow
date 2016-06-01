@@ -28,21 +28,6 @@ module.exports = {
 			}
 		}
 	],
-	module: {
-		loaders: [
-			{
-				test: /\.js?$/,
-				exclude: /(node_modules|bower_components)/,
-				loader: "babel",
-				query: {
-					auxiliaryComment: "istanbul ignore next",
-					compact: false,
-					blacklist: [ "strict" ],
-					experimental: true
-				}
-			}
-		]
-	},
 	plugins: [
 		new webpack.BannerPlugin( header )
 	]

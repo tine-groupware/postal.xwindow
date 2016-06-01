@@ -11,7 +11,6 @@ module.exports = function( config ) {
 		// list of files / patterns to load in the browser
 		files: [
 			"karma.globals.js",
-			"node_modules/babel-core/browser-polyfill.js",
 			"node_modules/jquery/dist/jquery.js",
 			"node_modules/lodash/index.js",
 			"node_modules/expect.js/expect.js",

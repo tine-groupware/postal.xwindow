@@ -1,6 +1,6 @@
-import _ from "lodash";
+require( "lodash" );
 
-export let env = {
+var env = {
 	origin: location.origin || location.protocol + "//" + location.host,
 	isWorker: ( typeof window === "undefined" ) && postMessage && location,
 	// I know, I KNOW. The alternative was very expensive perf & time-wise
@@ -13,7 +13,7 @@ export let env = {
 	useEagerSerialize: /MSIE [8,9]/.test( navigator.userAgent )
 };
 
-const defaults = {
+var defaults = {
 	allowedOrigins: [ env.origin ],
 	enabled: true,
 	safeSerialize: false,
@@ -21,8 +21,13 @@ const defaults = {
 	targetTimeout: 60000 // 1 minute
 };
 
-export let state = {
+var state = {
 	workers: [],
 	config: _.extend( {}, defaults ),
-	defaults
+	defaults: defaults
+};
+
+module.exports = {
+	state: state,
+	env: env
 };

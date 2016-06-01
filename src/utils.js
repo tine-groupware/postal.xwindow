@@ -1,6 +1,6 @@
-import _ from "lodash";
+require( "lodash" );
 
-export function _memoRemoteByInstanceId( memo, instanceId ) {
+var _memoRemoteByInstanceId = function( memo, instanceId ) {
 	var proxy = _.find( this.remotes, function( x ) {
 		return x.instanceId === instanceId;
 	} );
@@ -8,9 +8,9 @@ export function _memoRemoteByInstanceId( memo, instanceId ) {
 		memo.push( proxy );
 	}
 	return memo;
-}
+};
 
-export function _memoRemoteByTarget( memo, tgt ) {
+var _memoRemoteByTarget = function( memo, tgt ) {
 	var proxy = _.find( this.remotes, function( x ) {
 		return x.target === tgt;
 	} );
@@ -18,41 +18,28 @@ export function _memoRemoteByTarget( memo, tgt ) {
 		memo.push( proxy );
 	}
 	return memo;
-}
+};
 
-export function _disconnectClient( client ) {
+var _disconnectClient = function( client ) {
 	client.disconnect();
-}
+};
 
-export function safeSerialize( envelope ) {
-	for ( let [ key, val ] of entries( envelope ) ) {
-		if ( typeof val === "function" ) {
-			delete envelope[ key ];
+safeSerialize = function safeSerialize( envelope ) {
+	var json = JSON.parse( JSON.stringify( envelope, function( key, value ) {
+		if ( typeof value === "function" ) {
+			return undefined;
 		}
-		if ( _.isPlainObject( val ) ) {
-			safeSerialize( val );
-		}
-		if ( _.isArray( val ) ) {
-			_.each( val, safeSerialize );
-		}
-	}
-	return envelope;
-}
+		return value;
+	} ) );
 
-export var entries = function*( obj ) {
-	if ( [ "object", "function" ].indexOf( typeof obj ) === -1 ) {
-		obj = {};
-	}
-	for ( var k of Object.keys( obj ) ) {
-		yield [ k, obj[ k ] ];
-	}
+	return json;
 };
 
 // parseUri 1.2.2
 // (c) Steven Levithan <stevenlevithan.com>
 // MIT License
 
-export function parseUri( str ) {
+var parseUri = function( str ) {
 	var o = parseUri.options;
 	var m = o.parser[o.strictMode ? "strict" : "loose"].exec( str );
 	var uri = {};
@@ -83,4 +70,12 @@ parseUri.options = {
 		strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
 		loose: /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
 	}
+};
+
+module.exports = {
+	_memoRemoteByInstanceId: _memoRemoteByInstanceId,
+	_memoRemoteByTarget: _memoRemoteByTarget,
+	_disconnectClient: _disconnectClient,
+	safeSerialize: safeSerialize,
+	parseUri: parseUri
 };

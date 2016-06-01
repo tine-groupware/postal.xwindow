@@ -1,14 +1,10 @@
-import _ from "lodash";
-import postal from "postal";
-import {
-	_memoRemoteByInstanceId,
-	_memoRemoteByTarget,
-	_disconnectClient,
-	safeSerialize,
-	parseUri
-} from "./utils";
-import { state, env } from "./state";
-import XWindowClient from "./XWindowClient";
+require( "lodash" );
+var postal = require( "postal" );
+var utils = require( "./utils" );
+var S = require( "./state" );
+var state = S.state;
+var env = S.env;
+var XWindowClient = require( "./XWindowClient" );
 
 XWindowClient.getInstance = function( target, options, instanceId ) {
 	return new XWindowClient( target, options, instanceId );
@@ -29,17 +25,17 @@ postal.fedx.transports.xwindow = {
 	},
 	disconnect: function( options ) {
 		options = options || {};
-		const clients = options.instanceId ?
+		var clients = options.instanceId ?
 		// an instanceId value or array was provided, let's get the client proxy instances for the id(s)
-		_.reduce( _.isArray( options.instanceId ) ? options.instanceId : [ options.instanceId ], _memoRemoteByInstanceId, [], this ) :
+		_.reduce( _.isArray( options.instanceId ) ? options.instanceId : [ options.instanceId ], utils._memoRemoteByInstanceId, [], this ) :
 		// Ok so we don't have instanceId(s), let's try target(s)
 		options.target ?
 		// Ok, so we have a targets array, we need to iterate over it and get a list of the proxy/client instances
-		_.reduce( _.isArray( options.target ) ? options.target : [ options.target ], _memoRemoteByTarget, [], this ) :
+		_.reduce( _.isArray( options.target ) ? options.target : [ options.target ], utils._memoRemoteByTarget, [], this ) :
 		// aww, heck - we don't have instanceId(s) or target(s), so it's ALL THE REMOTES
 		this.remotes;
 		if ( !options.doNotNotify ) {
-			_.each( clients, _disconnectClient, this );
+			_.each( clients, utils._disconnectClient, this );
 		}
 		this.remotes = _.without.apply( null, [ this.remotes ].concat( clients ) );
 	},
@@ -47,11 +43,11 @@ postal.fedx.transports.xwindow = {
 		return this.tidyStorage();
 	},
 	sendMessage: function( env ) {
-		let envelope = env;
+		var envelope = env;
 		if ( state.config.safeSerialize ) {
-			envelope = safeSerialize( _.cloneDeep( env ) );
+			envelope = utils.safeSerialize( _.cloneDeep( env ) );
 		}
-		const instanceId = postal.instanceId();
+		var instanceId = postal.instanceId();
 
 		_.each( this.remotes, function( remote ) {
 			if ( remote.instanceId != instanceId ) {
@@ -82,11 +78,11 @@ postal.fedx.transports.xwindow = {
 		}
 	},
 	routeMessage: function( event ) {
-		const parsed = this.unwrapFromTransport( event.newValue );
+		var parsed = this.unwrapFromTransport( event.newValue );
 
 		if ( parsed && parsed.postal ) {
-			const packingSlip = parsed.packingSlip;
-			const instanceId = packingSlip.instanceId;
+			var packingSlip = parsed.packingSlip;
+			var instanceId = packingSlip.instanceId;
 			if ( packingSlip && instanceId != postal.instanceId() ) {
 				var remote = _.find( this.remotes, function( x ) {
 					return x.instanceId === instanceId;
@@ -98,8 +94,8 @@ postal.fedx.transports.xwindow = {
 				}
 
 				// origin forgery protection
-				const url = parseUri( event.url );
-				const origin = url.protocol + "://" + url.authority;
+				var url = utils.parseUri( event.url );
+				var origin = url.protocol + "://" + url.authority;
 
 				if ( remote.options.origin == origin ) {
 					remote.onMessage( packingSlip );
@@ -108,8 +104,8 @@ postal.fedx.transports.xwindow = {
 		}
 	},
 	signalReady: function( targets, callback ) {
-		const instanceId = postal.instanceId();
-		const that = this;
+		var instanceId = postal.instanceId();
+		var that = this;
 
 		this.target = store.namespace( state.config.localStoragePrefix + "." + instanceId );
 		this.target.on( "message", _.bind( this.routeMessage, this ) );
@@ -142,17 +138,17 @@ postal.fedx.transports.xwindow = {
 		_.delay( _.bind( this.keepAlive, this ), Math.round( state.config.targetTimeout / 2 ) );
 	},
 	tidyStorage: function() {
-		const targetIds = _.reduce( store.namespace( state.config.localStoragePrefix ).getAll(), function( memo, targetData, id ) {
-			const targetId = id.split( "." )[0];
+		var targetIds = _.reduce( store.namespace( state.config.localStoragePrefix ).getAll(), function( memo, targetData, id ) {
+			var targetId = id.split( "." )[0];
 			if ( _.indexOf( memo, targetId ) < 0 ) {
 				memo.push( targetId );
 			}
 			return memo;
 		}, [] );
 
-		const now = new Date().getTime();
+		var now = new Date().getTime();
 		return _.reduce( targetIds, function( memo, targetId ) {
-			const target = store.namespace( state.config.localStoragePrefix + "." + targetId );
+			var target = store.namespace( state.config.localStoragePrefix + "." + targetId );
 			if ( target.get( "targetTimeout" ) < now ) {
 				target.clear();
 			} else {
@@ -166,7 +162,7 @@ postal.fedx.transports.xwindow = {
 		}, [] );
 	},
 	tidyRemotes: function() {
-		const that = this;
+		var that = this;
 		_.each( this.remotes, function( remote ) {
 			if ( _.isEmpty( remote.target.getAll() ) ) {
 				that.disconnect( { target: remote.target } );
