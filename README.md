@@ -1,6 +1,6 @@
 # postal.xwindow
 
-## Version 0.0.3 (Dual Licensed [MIT](http://www.opensource.org/licenses/mit-license) & [GPL](http://www.opensource.org/licenses/gpl-license))
+## Version 0.0.4 (Dual Licensed [MIT](http://www.opensource.org/licenses/mit-license) & [GPL](http://www.opensource.org/licenses/gpl-license))
 
 ## What is it?
 postal.xwindow is an add-on for [postal.js](https://github.com/postaljs/postal.js) that provides cross window communication capabilities using a localStoreage hack.

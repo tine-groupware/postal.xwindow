@@ -1,4 +1,4 @@
-require( "lodash" );
+var _ = require( "lodash" );
 
 var _memoRemoteByInstanceId = function( memo, instanceId ) {
 	var proxy = _.find( this.remotes, function( x ) {

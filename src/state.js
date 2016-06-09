@@ -1,4 +1,4 @@
-require( "lodash" );
+var _ = require( "lodash" );
 
 var env = {
 	origin: location.origin || location.protocol + "//" + location.host,

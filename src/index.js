@@ -1,4 +1,4 @@
-require( "lodash" );
+var _ = require( "lodash" );
 var postal = require( "postal" );
 var utils = require( "./utils" );
 var S = require( "./state" );

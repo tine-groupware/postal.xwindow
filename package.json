@@ -1,7 +1,7 @@
 {
   "name": "postal.xwindow",
   "description": "postal.js/postal.federation plugin for federating instances of postal.js across unrelated window boundaries.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "homepage": "http://github.com/tine20/postal.xwindow",
   "repository": {
     "type": "git",
