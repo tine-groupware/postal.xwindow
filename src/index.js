@@ -27,15 +27,15 @@ postal.fedx.transports.xwindow = {
 		options = options || {};
 		var clients = options.instanceId ?
 		// an instanceId value or array was provided, let's get the client proxy instances for the id(s)
-		_.reduce( _.isArray( options.instanceId ) ? options.instanceId : [ options.instanceId ], utils._memoRemoteByInstanceId, [], this ) :
+		_.reduce( _.isArray( options.instanceId ) ? options.instanceId : [ options.instanceId ], _.bind( utils._memoRemoteByInstanceId, this ), [] ) :
 		// Ok so we don't have instanceId(s), let's try target(s)
 		options.target ?
 		// Ok, so we have a targets array, we need to iterate over it and get a list of the proxy/client instances
-		_.reduce( _.isArray( options.target ) ? options.target : [ options.target ], utils._memoRemoteByTarget, [], this ) :
+		_.reduce( _.isArray( options.target ) ? options.target : [ options.target ], _.bind( utils._memoRemoteByTarget, this ), [] ) :
 		// aww, heck - we don't have instanceId(s) or target(s), so it's ALL THE REMOTES
 		this.remotes;
 		if ( !options.doNotNotify ) {
-			_.each( clients, utils._disconnectClient, this );
+			_.forEach( clients, _.bind( utils._disconnectClient, this ) );
 		}
 		this.remotes = _.without.apply( null, [ this.remotes ].concat( clients ) );
 	},
@@ -49,7 +49,7 @@ postal.fedx.transports.xwindow = {
 		}
 		var instanceId = postal.instanceId();
 
-		_.each( this.remotes, function( remote ) {
+		_.forEach( this.remotes, function( remote ) {
 			if ( remote.instanceId != instanceId ) {
 				remote.sendMessage( envelope );
 			}
@@ -115,7 +115,7 @@ postal.fedx.transports.xwindow = {
 		targets = targets.length ? targets : this.getTargets();
 		callback = callback || function() {};
 
-		_.each( targets, function( def ) {
+		_.forEach( targets, _.bind( function( def ) {
 			if ( def.targetId != instanceId ) {
 				var remote = _.find( that.remotes, function( x ) {
 					return x.instanceId === def.targetId;
@@ -126,7 +126,7 @@ postal.fedx.transports.xwindow = {
 				}
 				remote.sendPing( callback );
 			}
-		}, this );
+		}, this ) );
 	},
 	keepAlive: function() {
 		this.target.set( "targetUrl", env.origin );
@@ -163,7 +163,7 @@ postal.fedx.transports.xwindow = {
 	},
 	tidyRemotes: function() {
 		var that = this;
-		_.each( this.remotes, function( remote ) {
+		_.forEach( this.remotes, function( remote ) {
 			if ( _.isEmpty( remote.target.getAll() ) ) {
 				that.disconnect( { target: remote.target } );
 			}
