@@ -39,7 +39,7 @@
   "dependencies": {
     "lodash": "^4.12.0",
     "postal": "^2.0.5",
-    "postal.federation": ">=0.5.5",
+    "postal.federation": "github:tine20/postal.federation",
     "store2": "^2.1.6"
   },
   "devDependencies": {
