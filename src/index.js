@@ -4,6 +4,8 @@ var utils = require( "./utils" );
 var S = require( "./state" );
 var state = S.state;
 var env = S.env;
+require( "script-loader!store2" );
+require( "script-loader!store2/src/store.bind.js" );
 var XWindowClient = require( "./XWindowClient" );
 
 XWindowClient.getInstance = function( target, options, instanceId ) {
