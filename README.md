@@ -1,6 +1,6 @@
 # postal.xwindow
 
-## Version 0.0.7 (Dual Licensed [MIT](http://www.opensource.org/licenses/mit-license) & [GPL](http://www.opensource.org/licenses/gpl-license))
+## Version 0.0.8 (Dual Licensed [MIT](http://www.opensource.org/licenses/mit-license) & [GPL](http://www.opensource.org/licenses/gpl-license))
 
 ## What is it?
 postal.xwindow is an add-on for [postal.js](https://github.com/postaljs/postal.js) that provides cross window communication capabilities using a localStoreage hack.
@@ -78,8 +78,5 @@ postal.fedx.transports.xwindow.configure({
 ## TODO
  * cope/support origins?!
  * support rename of instance
- * use newer version of store
- * convert store to be usable by webpack
- * wirte tests
- * push to github
+ * write tests
  * implement cleanup on window close
